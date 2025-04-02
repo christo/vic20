@@ -1,3 +1,5 @@
+// assembler syntax: kick assembler
+
     * = $1001 "basic stub then machine code"
     .word nextLine
     .word 2025
@@ -20,3 +22,5 @@ end:
 hello:
     .text "HELLO WORLD"
     .byte 0
+
+
