@@ -42,8 +42,11 @@ Commodore VIC-20
 * The ST16C450 utilizes the industry-standard 8250 register set.
   https://en.wikibooks.org/wiki/Serial_Programming/8250_UART_Programming
 
-The UART implementation is
-straightforward, with only 2 specific notes:
+* https://github.com/polykit/vic20-sequencer
+* https://www.youtube.com/watch?v=cCfxLhu_GRw
+* https://worldradiohistory.com/UK/Mapelin/Maplin-Project-Book-22.pdf#page=32
+
+The UART implementation is straightforward, with only 2 specific notes:
 
 * The OPT1 bit (bit 2 of $9804/38916) should be set to 1 to enable the MIDI
   drivers and set to 0 to enable the RS232 drivers.
