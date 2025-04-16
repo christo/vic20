@@ -42,6 +42,7 @@ Commodore VIC-20
 * The ST16C450 utilizes the industry-standard 8250 register set.
   https://en.wikibooks.org/wiki/Serial_Programming/8250_UART_Programming
 
+* https://github.com/LeifBloomquist/VICMIDI
 * https://github.com/polykit/vic20-sequencer
 * https://www.youtube.com/watch?v=cCfxLhu_GRw
 * https://worldradiohistory.com/UK/Mapelin/Maplin-Project-Book-22.pdf#page=32
