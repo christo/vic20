@@ -36,11 +36,13 @@ Commodore VIC-20
 
 ## Technical Details
 
-VIC-MIDI supports the Ultimem registers at `$9ff0` (40944), while the
-`ST16c450``
-UART registers appear at $9800 (38912). Ultimem registers and usage are
-described on the Ultimem product page, while the ST16C450 utilizes the
-  industry-standard 8250 register set.  The UART implementation is
+* VIC-MIDI supports the Ultimem registers at `$9ff0` (40944)
+* The `ST16c450`` UART registers appear at $9800 (38912). 
+* Ultimem registers and usage are described on the Ultimem product page.
+* The ST16C450 utilizes the industry-standard 8250 register set.
+  https://en.wikibooks.org/wiki/Serial_Programming/8250_UART_Programming
+
+The UART implementation is
 straightforward, with only 2 specific notes:
 
 * The OPT1 bit (bit 2 of $9804/38916) should be set to 1 to enable the MIDI
