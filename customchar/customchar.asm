@@ -11,13 +11,19 @@
 
 .cpu "6502"
 
-NCHARS = ((CHARDATA_END - CHARDATA) / 8)
+NCHARS = ((CHARDATA_END - CHARDATA) / 8) ; number of redefined characters
 N_SCR_COLS = 22
 N_SCR_ROWS = 21
-START_SCR = $1E00
+START_SCR = $1E00                 ; 7680 unexpanded
+START_COLOUR = $9600              ; 38400 unexpanded
+START_BASIC_PRG = $1001           ; 4097 unexpanded
+VIC_CHARBASE = $9005              ; 37869
+CHARDEF_BASE = $1c00               ; 7168
+UPPERCASE_BASE = $8000            ; 32768 upper/graphics chars in ROM
+BORDER_COLOUR = $900f             ; 36879
 
 ; Basic launcher stub to make it easily runnable
-*=$1001        ; BASIC program starts at $1200
+*=START_BASIC_PRG        ; BASIC program starts at $1200
         .word END_LINE
         .word 2025                ; line number
         .byte $9E                 ; SYS token
@@ -27,51 +33,83 @@ END_LINE
         .word $00                 ; End of BASIC program
 
 START   sei                       ; Disable interrupts while we modify memory
+        lda #$ff                  ; set aside 64 chars as custom
+        sta VIC_CHARBASE          ; Store in VIC character base register
 
-        ; Set custom character base address
-        ; We'll use $9600 as our custom character set location (pattern buffer)
-        lda #$96                  ; High byte of our custom character set location
-        lsr                       ; Shift right 4 times to get bits in position 0-3
-        lsr
-        lsr
-        lsr
-        sta $9005                 ; Store in VIC character base register
-
-        ; Copy ROM character data to RAM for the characters we want to modify
-        ; ROM character set is at $8000, we'll copy characters @ through O (ASCII 64-79)
-        ldx #$00                  ; Initialize counter
-COPY    lda $8000+64*8,x          ; Load character data from ROM (@ is at position 64, 8 bytes per char)
-        sta $9600,x               ; Store in our custom character area
-        inx                       ; Increment counter
-        cpx 8 * NCHARS            ; nchars * 8 bytes
-        bne COPY                  ; Loop until all bytes copied
-
-        ; Modify the character data for each character
-        ldx #$00                  ; Reset counter
-MODIFY  lda CHARDATA,x            ; Load our custom pattern from data table
-        sta $9600,x               ; Store in custom character area
-        inx                       ; Increment counter
-        cpx 8 * NCHARS            ; nchars * 8 bytes
-        bne MODIFY                ; Loop until all bytes modified
+        lda #4
+        sta BORDER_COLOUR
 
         ; Clear the screen
-        lda #$20                  ; Space character
-        ldx #$00                  ; Start at first char
-CLEAR   sta START_SCR,x           ; Store space in screen memory
-        inx                       ; Next position
-        cpx NCHARS
-        bne CLEAR                 ; Loop until screen cleared
+        lda #$20
+        ldx #$00
+CLEAR   sta START_SCR,x
+        sta START_SCR+207,x
+        inx
+        cpx $ff
+        bne CLEAR
 
-        ; Display our custom characters on screen
+        ; Copy ROM character data to RAM for 64 characters then modify some of those
         ldx #$00                  ; Initialize counter
-        ldy #$00                  ; char counter
-        lda #64                   ; Start with @ character (ASCII 64)
+COPY    lda UPPERCASE_BASE,x      ; Load character data from ROM 8 bytes per char
+        sta CHARDEF_BASE,x         ; Store in our custom character area
+        lda UPPERCASE_BASE+1,x
+        sta CHARDEF_BASE+1,x
+        lda UPPERCASE_BASE+2,x
+        sta CHARDEF_BASE+2,x
+        lda UPPERCASE_BASE+3,x
+        sta CHARDEF_BASE+3,x
+        lda UPPERCASE_BASE+4,x
+        sta CHARDEF_BASE+4,x
+        lda UPPERCASE_BASE+5,x
+        sta CHARDEF_BASE+5,x
+        lda UPPERCASE_BASE+6,x
+        sta CHARDEF_BASE+6,x
+        lda UPPERCASE_BASE+7,x
+        inx                       ; Increment char counter
+        cpx $40                   ; 64
+        bne COPY                  ; Loop until all bytes of chars copied
+
+        lda #5
+        sta BORDER_COLOUR
+
+        ; Modify the character data for the redefined characters
+        ldx #$00                  ; Reset counter
+MODIFY  lda CHARDATA,x            ; Load from data table
+        sta CHARDEF_BASE,x        ; Store in custom character area
+        lda CHARDATA+1,x
+        sta CHARDEF_BASE+1,x
+        lda CHARDATA+2,x
+        sta CHARDEF_BASE+2,x
+        lda CHARDATA+3,x
+        sta CHARDEF_BASE+3,x
+        lda CHARDATA+4,x
+        sta CHARDEF_BASE+4,x
+        lda CHARDATA+5,x
+        sta CHARDEF_BASE+5,x
+        lda CHARDATA+6,x
+        sta CHARDEF_BASE+6,x
+        lda CHARDATA+7,x
+        sta CHARDEF_BASE+7,x
+        inx
+        cpx NCHARS
+        bne MODIFY
+
+        lda #6
+        sta BORDER_COLOUR
+
+        ; Display custom characters on screen
+        ldx #$00                  ; screen position
+        lda #$00                  ; char code
 DISPLAY sta START_SCR+N_SCR_COLS+1,x  ; start on second row, second column
         inx                       ; Next screen position
         inx                       ; skip one
-        iny                       ; Next position data
-        cpy NCHARS                ; All characters displayed?
+        clc
+        adc #1
+        cmp NCHARS                ; All characters displayed?
         bne DISPLAY               ; If not, continue
+
+        lda #7
+        sta BORDER_COLOUR
 
         cli                       ; Re-enable interrupts
         rts                       ; Return to BASIC
@@ -99,16 +137,16 @@ CHARDATA
         .byte %01111110           ; ******
 
         ;  lightning bolt
-        .byte %00000000
-        .byte %00001000
-        .byte %00011000
-        .byte %00110000
-        .byte %01111110
-        .byte %00001100
-        .byte %00011000
-        .byte %00010000
+        .byte %00000000           ;
+        .byte %00001000           ;    *
+        .byte %00011000           ;   **
+        .byte %00110000           ;  **
+        .byte %01111110           ; ******
+        .byte %00001100           ;    **
+        .byte %00011000           ;   **
+        .byte %00010000           ;   *
 
-        ;  - Cross
+        ; Cross
         .byte %00011000           ;   **
         .byte %00011000           ;   **
         .byte %00011000           ;   **
@@ -118,7 +156,7 @@ CHARDATA
         .byte %00011000           ;   **
         .byte %00011000           ;   **
 
-        ;  - Diamond
+        ; Diamond
         .byte %00011000           ;   **
         .byte %00111100           ;  ****
         .byte %01111110           ; ******
