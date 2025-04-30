@@ -50,10 +50,16 @@ CLEAR   lda #$20
         bne CLEAR
 
         ; Copy ROM character data to RAM for characters then modify some of those
-        ldx NCHARS * 8             ; number of bytes to copy
-CPBYTE  lda UPPERCASE_BASE,x       ; Load character data from ROM 8 bytes per char
-        sta CHARDEF_BASE,x         ; Store in our custom character area
-        dex
+        ldx 0             ; number of bytes to copy
+CPBYTE  
+        lda UPPERCASE_BASE,x
+        sta CHARDEF_BASE,x
+        lda UPPERCASE_BASE+8*16,x
+        sta CHARDEF_BASE+8*16,x
+        lda UPPERCASE_BASE+8*32,x
+        sta CHARDEF_BASE+8*32,x
+        inx
+        cpx #8*16
         bne CPBYTE
         
         ; Modify the character data for the redefined characters
