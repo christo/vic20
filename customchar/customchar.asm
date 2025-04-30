@@ -40,61 +40,37 @@ START   sei                       ; Disable interrupts while we modify memory
         sta BORDER_COLOUR
 
         ; Clear the screen
-        lda #$20
         ldx #$00
-CLEAR   sta START_SCR,x
+CLEAR   lda #$20
+        sta START_SCR,x
         sta START_SCR+207,x
+        lda #1
+        sta START_COLOUR,x
+        sta START_COLOUR+207,x
         inx
         cpx $ff
         bne CLEAR
 
         ; Copy ROM character data to RAM for 64 characters then modify some of those
-        ldx #$00                  ; Initialize counter
+        ldx #$00                  ; init byte counter
 COPY    lda UPPERCASE_BASE,x      ; Load character data from ROM 8 bytes per char
         sta CHARDEF_BASE,x         ; Store in our custom character area
-        lda UPPERCASE_BASE+1,x
-        sta CHARDEF_BASE+1,x
-        lda UPPERCASE_BASE+2,x
-        sta CHARDEF_BASE+2,x
-        lda UPPERCASE_BASE+3,x
-        sta CHARDEF_BASE+3,x
-        lda UPPERCASE_BASE+4,x
-        sta CHARDEF_BASE+4,x
-        lda UPPERCASE_BASE+5,x
-        sta CHARDEF_BASE+5,x
-        lda UPPERCASE_BASE+6,x
-        sta CHARDEF_BASE+6,x
-        lda UPPERCASE_BASE+7,x
-        inx                       ; Increment char counter
-        cpx $40                   ; 64
+        inx
+        cpx #8
         bne COPY                  ; Loop until all bytes of chars copied
 
-        lda #5
+        lda #23
         sta BORDER_COLOUR
 
         ; Modify the character data for the redefined characters
         ldx #$00                  ; Reset counter
 MODIFY  lda CHARDATA,x            ; Load from data table
         sta CHARDEF_BASE,x        ; Store in custom character area
-        lda CHARDATA+1,x
-        sta CHARDEF_BASE+1,x
-        lda CHARDATA+2,x
-        sta CHARDEF_BASE+2,x
-        lda CHARDATA+3,x
-        sta CHARDEF_BASE+3,x
-        lda CHARDATA+4,x
-        sta CHARDEF_BASE+4,x
-        lda CHARDATA+5,x
-        sta CHARDEF_BASE+5,x
-        lda CHARDATA+6,x
-        sta CHARDEF_BASE+6,x
-        lda CHARDATA+7,x
-        sta CHARDEF_BASE+7,x
         inx
-        cpx NCHARS
+        cpx #NCHARS*8
         bne MODIFY
 
-        lda #6
+        lda #24
         sta BORDER_COLOUR
 
         ; Display custom characters on screen
@@ -105,10 +81,10 @@ DISPLAY sta START_SCR+N_SCR_COLS+1,x  ; start on second row, second column
         inx                       ; skip one
         clc
         adc #1
-        cmp NCHARS                ; All characters displayed?
+        cmp #NCHARS                ; All characters displayed?
         bne DISPLAY               ; If not, continue
 
-        lda #7
+        lda #25
         sta BORDER_COLOUR
 
         cli                       ; Re-enable interrupts
