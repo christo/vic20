@@ -13,7 +13,7 @@
 
 NCHARS = ((CHARDATA_END - CHARDATA) / 8) ; number of redefined characters
 N_SCR_COLS = 22
-N_SCR_ROWS = 21
+N_SCR_ROWS = 23
 START_SCR = $1E00                 ; 7680 unexpanded
 START_COLOUR = $9600              ; 38400 unexpanded
 START_BASIC_PRG = $1001           ; 4097 unexpanded
@@ -26,14 +26,16 @@ BORDER_COLOUR = $900f             ; 36879
 *=START_BASIC_PRG        ; BASIC program starts at $1200
         .word END_LINE
         .word 2025                ; line number
-        .byte $9E                 ; SYS token
+        .byte $9e                 ; SYS token
         .text "4109"        ;  str(START)          ; Decimal value of START as string
         .byte $00                 ; eol
 END_LINE
         .word $00                 ; End of BASIC program
 
 START   sei                       ; Disable interrupts while we modify memory
-        lda #$ff                  ; set aside 64 chars as custom
+        lda VIC_CHARBASE
+        and #$f0
+        ora #$0f
         sta VIC_CHARBASE          ; Store in VIC character base register
 
         lda #4
