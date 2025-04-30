@@ -38,56 +38,39 @@ START   sei                       ; Disable interrupts while we modify memory
         ora #$0f
         sta VIC_CHARBASE          ; Store in VIC character base register
 
-        lda #4
-        sta BORDER_COLOUR
-
         ; Clear the screen
-        ldx #$00
+        ldx #$ff
 CLEAR   lda #$20
         sta START_SCR,x
         sta START_SCR+207,x
         lda #1
         sta START_COLOUR,x
         sta START_COLOUR+207,x
-        inx
-        cpx $ff
+        dex
         bne CLEAR
 
-        ; Copy ROM character data to RAM for 64 characters then modify some of those
-        ldx #$00                  ; init byte counter
-COPY    lda UPPERCASE_BASE,x      ; Load character data from ROM 8 bytes per char
+        ; Copy ROM character data to RAM for characters then modify some of those
+        ldx NCHARS * 8             ; number of bytes to copy
+CPBYTE  lda UPPERCASE_BASE,x       ; Load character data from ROM 8 bytes per char
         sta CHARDEF_BASE,x         ; Store in our custom character area
-        inx
-        cpx #8
-        bne COPY                  ; Loop until all bytes of chars copied
-
-        lda #23
-        sta BORDER_COLOUR
-
+        dex
+        bne CPBYTE
+        
         ; Modify the character data for the redefined characters
-        ldx #$00                  ; Reset counter
+        ldx NCHARS * 8                  ; Reset counter
 MODIFY  lda CHARDATA,x            ; Load from data table
         sta CHARDEF_BASE,x        ; Store in custom character area
-        inx
-        cpx #NCHARS*8
+        dex
         bne MODIFY
 
-        lda #24
-        sta BORDER_COLOUR
-
         ; Display custom characters on screen
-        ldx #$00                  ; screen position
-        lda #$00                  ; char code
-DISPLAY sta START_SCR+N_SCR_COLS+1,x  ; start on second row, second column
-        inx                       ; Next screen position
-        inx                       ; skip one
-        clc
-        adc #1
+        ldx #$00                  ; char code
+DISPLAY 
+        txa
+        sta START_SCR,x
+        inx
         cmp #NCHARS                ; All characters displayed?
         bne DISPLAY               ; If not, continue
-
-        lda #25
-        sta BORDER_COLOUR
 
         cli                       ; Re-enable interrupts
         rts                       ; Return to BASIC
@@ -134,45 +117,42 @@ CHARDATA
         .byte %00011000           ;   **
         .byte %00011000           ;   **
 
-        ; Diamond
-        .byte %00011000           ;   **
-        .byte %00111100           ;  ****
-        .byte %01111110           ; ******
-        .byte %11111111           ;********
-        .byte %11111111           ;********
-        .byte %01111110           ; ******
-        .byte %00111100           ;  ****
-        .byte %00011000           ;   **
+        .byte %00011000
+        .byte %01111110
+        .byte %01011010
+        .byte %11100111
+        .byte %11100111
+        .byte %01011010
+        .byte %01111110
+        .byte %00011000
 
         ; Humanoid
         .byte %00011000           ;   **
-        .byte %01111110           ; ******
-        .byte %01111110           ; ******
-        .byte %00111100           ;  ****
+        .byte %00111100           ;  **** 
+        .byte %00111100           ;  **** 
+        .byte %00011000           ;   ** 
         .byte %11111111           ;********
         .byte %00111100           ;  ****
         .byte %01100110           ; **  **
         .byte %11000011           ;**    **
 
-        ;  - Heart
-        .byte %01100110           ; **  **
-        .byte %11111111           ;********
-        .byte %11111111           ;********
-        .byte %11111111           ;********
-        .byte %01111110           ; ******
-        .byte %00111100           ;  ****
-        .byte %00011000           ;   **
-        .byte %00000000           ;
+        .byte %01000010
+        .byte %11100111
+        .byte %10100101
+        .byte %01011010
+        .byte %01111110
+        .byte %00111100
+        .byte %00011000
+        .byte %00011000
 
-        ;  - Vertical bars
-        .byte %10010010           ;*  *  *
-        .byte %10010010           ;*  *  *
-        .byte %10010010           ;*  *  *
-        .byte %10010010           ;*  *  *
-        .byte %10010010           ;*  *  *
-        .byte %10010010           ;*  *  *
-        .byte %10010010           ;*  *  *
-        .byte %10010010           ;*  *  *
+        .byte %10010010
+        .byte %10010010
+        .byte %00100100
+        .byte %11011010
+        .byte %10010010
+        .byte %10010010
+        .byte %10010010
+        .byte %10010010
 
         ; South West Arrow
         .byte %00000001           ;       *
@@ -237,10 +217,10 @@ CHARDATA
         ; Donut
         .byte %00111100           ;  ****
         .byte %01000010           ; *    *
-        .byte %10000001           ;*  **  *
-        .byte %10000001           ;* *  * *
-        .byte %10000001           ;* *  * *
-        .byte %10000001           ;*  **  *
+        .byte %10011001           ;*  **  *
+        .byte %10100101           ;* *  * *
+        .byte %10100101           ;* *  * *
+        .byte %10011001           ;*  **  *
         .byte %01000010           ; *    *
         .byte %00111100           ;  ****
 CHARDATA_END
