@@ -23,7 +23,7 @@ UPPERCASE_BASE = $8000            ; 32768 upper/graphics chars in ROM
 BORDER_COLOUR = $900f             ; 36879
 
 ; Basic launcher stub to make it easily runnable
-*=START_BASIC_PRG        ; BASIC program starts at $1200
+*=START_BASIC_PRG
         .word END_LINE
         .word 2025                ; line number
         .byte $9e                 ; SYS token
@@ -64,10 +64,11 @@ CPBYTE
         bne CPBYTE
         
         ; Modify the character data for the redefined characters
-        ldx NCHARS * 8                  ; Reset counter
+        ldx #0
 MODIFY  lda CHARDATA,x            ; Load from data table
         sta CHARDEF_BASE,x        ; Store in custom character area
-        dex
+        inx
+        cpx NCHARS * 8            ; FIXME only works under 32 chars
         bne MODIFY
 
         ; Display custom characters on screen
