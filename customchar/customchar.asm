@@ -18,7 +18,7 @@ START_SCR = $1E00                 ; 7680 unexpanded
 START_COLOUR = $9600              ; 38400 unexpanded
 START_BASIC_PRG = $1001           ; 4097 unexpanded
 VIC_CHARBASE = $9005              ; 37869
-CHARDEF_BASE = $1c00               ; 7168
+CHARDEF_BASE = $1c00              ; 7168
 UPPERCASE_BASE = $8000            ; 32768 upper/graphics chars in ROM
 BORDER_COLOUR = $900f             ; 36879
 
@@ -33,6 +33,7 @@ END_LINE
         .word $00                 ; End of BASIC program
 
 START   sei                       ; Disable interrupts while we modify memory
+
         lda VIC_CHARBASE
         and #$f0
         ora #$0f
